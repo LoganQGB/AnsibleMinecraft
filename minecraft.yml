@@ -1,0 +1,41 @@
+- name: Installation serveur minecraft
+  hosts: minecraft
+  remote_user: root
+  vars:
+     user: minecraft
+
+  tasks:
+    - name: installation paquet
+      apt: name={{ item }} update_cache=yes
+      with_items:
+        - screen
+        - nano
+        - wget
+        - git
+    - name: telechargement openjdk
+      ansible.builtin.get_url:
+        url: https://download.oracle.com/java/21/latest/jdk-21_linux-x64_bin.deb
+        dest: /home/java
+    - name: installation openjdk
+      ansible.builtin.apt:
+        deb: /home/java
+      become: yes
+    - name: Cr  ation utilisateur
+      user: name={{ user }}
+    - name: ajout de la clef ssh
+      ansible.builtin.authorized_key: user={{ user }} key="{{ lookup('file', '~/.ssh/id_rsa.pub') }}"
+    - name: cr  ation dossier serveur
+      ansible.builtin.file:
+        path: /home/minecraft/server
+        state: directory
+        mode: '0755'
+        owner: minecraft
+        group: minecraft
+    - name: installation minecraft server
+      ansible.builtin.get_url:
+        url: https://piston-data.mojang.com/v1/objects/95495a7f485eedd84ce928cef5e223b757d2f764/server.jar
+        dest: /home/minecraft/server
+    - name: cr  ation fichier eula
+      copy:
+        dest: /home/minecraft/server/eula.txt
+        content: 'eula=true'

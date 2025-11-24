@@ -1,0 +1,24 @@
+- name: Cr  ation d'un container lxc
+  hosts: localhost
+  connection: local
+
+  tasks:
+    - name: Cr  ation d'un container
+      community.general.proxmox:
+        api_host: "10.1.0.253"
+        api_user: "root@pam"
+        api_token_id: "ansible-token"
+        api_token_secret: "425b6c4f-1eb8-472a-96b6-b7df180470b0"
+        node: "pve-01"
+        vmid: "300"
+        hostname: testct
+        ostemplate: "local:vztmpl/debian-12-standard_12.12-1_amd64.tar.zst"
+        storage: "Syno"
+        cores: 1
+        memory: 512
+        swap: 512
+        netif:
+          net0: "name=eth0,bridge=vmbr0,ip=dhcp"
+        password: "root!"
+        unprivileged: false
+        state: present
