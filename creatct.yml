@@ -1,6 +1,14 @@
 - name: Cr  ation d'un container lxc
   hosts: localhost
   connection: local
+  vars:
+    vmid: 300
+    hostname: testct
+    template: "local:vztmpl/debian-12-standard_12.12-1_amd64.tar.zst"
+    ssh_public_key: "{{ lookup('file', '~/.ssh/id_rsa.pub') }}"
+    cores: 1
+    memory: 512
+    swap: 512
 
   tasks:
     - name: Cr  ation d'un container
@@ -10,13 +18,13 @@
         api_token_id: "ansible-token"
         api_token_secret: "425b6c4f-1eb8-472a-96b6-b7df180470b0"
         node: "pve-01"
-        vmid: "300"
-        hostname: testct
-        ostemplate: "local:vztmpl/debian-12-standard_12.12-1_amd64.tar.zst"
+        vmid: "{{ vmid }}"
+        hostname: "{{ hostname }}"
+        ostemplate: "{{ template }}"
         storage: "Syno"
-        cores: 1
-        memory: 512
-        swap: 512
+        cores: "{{ cores }}"
+        memory: "{{ memory }}"
+        swap: "{{ swap }}"
         netif:
           net0: "name=eth0,bridge=vmbr0,ip=dhcp"
         password: "root!"
