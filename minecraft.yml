@@ -39,3 +39,19 @@
       copy:
         dest: /home/minecraft/server/eula.txt
         content: 'eula=true'
+    - name: Télécharger le paquet zabbix-release
+      ansible.builtin.get_url:
+        url: https://repo.zabbix.com/zabbix/7.4/release/debian/pool/main/z/zabbix-release/zabbix-release_latest_7.4+debian12_all.deb
+        dest: /tmp/zabbix-release_latest_7.4+debian12_all.deb
+    - name: installation paquet zabbix-release
+      ansible.builtin.apt:
+        deb: /tmp/zabbix-release_latest_7.4+debian12_all.deb
+    - name: installation paquet zabbix agent 2
+      ansible.builtin.apt:
+        name : zabbix-agent2
+        state: present
+    - name: Activer et démarrer le service Zabbix Agent 2
+      ansible.builtin.service:
+        name: zabbix-agent2
+        state: started
+        enabled: yes
