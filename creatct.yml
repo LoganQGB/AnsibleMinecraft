@@ -2,31 +2,85 @@
   hosts: localhost
   connection: local
   vars:
-    vmid: 300
+    vmid: 301
     hostname: testct
     template: "local:vztmpl/debian-12-standard_12.12-1_amd64.tar.zst"
     ssh_public_key: "{{ lookup('file', '~/.ssh/id_rsa.pub') }}"
-    cores: 1
-    memory: 512
-    swap: 512
+    containers:
+      - vmid: 301
+        hostname: testct01
+        ip: "10.10.10.201"
+        cores: 2
+        memory: 1024
+      - vmid: 302
+        hostname: testct02
+        ip: "10.10.10.202"
+        cores: 2
+        memory: 1024
+      - vmid: 303
+        hostname: testct03
+        ip: "10.10.10.203"
+        cores: 2
+        memory: 1024
+    gateway: "10.10.10.1"
+    netmask: "24"
 
   tasks:
     - name: Cr  ation d'un container
       community.general.proxmox:
-        api_host: "10.1.0.253"
-        api_user: "root@pam"
+        api_host: "px.lebaron.sh"
+        api_user: "logan@pam"
         api_token_id: "ansible-token"
-        api_token_secret: "425b6c4f-1eb8-472a-96b6-b7df180470b0"
-        node: "pve-01"
-        vmid: "{{ vmid }}"
-        hostname: "{{ hostname }}"
+        api_token_secret: "0241ba01-df63-445d-a406-9357f2d2c80c"
+        node: "px"
+        vmid: "{{ item.vmid }}"
+        hostname: "{{ item.hostname }}"
         ostemplate: "{{ template }}"
-        storage: "Syno"
-        cores: "{{ cores }}"
-        memory: "{{ memory }}"
-        swap: "{{ swap }}"
+        storage: "local"
+        cores: "{{ item.cores }}"
+        memory: "{{ item.memory }}"
+        swap: "{{ item.memory }}"
         netif:
-          net0: "name=eth0,bridge=vmbr0,ip=dhcp"
+          net0: "name=eth0,bridge=vmbr1,ip={{ item.ip }}/{{ netmask }},gw={{ gateway }}"
         password: "root!"
         unprivileged: false
         state: present
+        pubkey: "{{ ssh_public_key }}"
+      loop: "{{ containers }}"
+
+    - name: Démarrer le container
+      community.general.proxmox:
+        api_host: "px.lebaron.sh"
+        api_user: "logan@pam"
+        api_token_id: "ansible-token"
+        api_token_secret: "0241ba01-df63-445d-a406-9357f2d2c80c"
+        vmid: "{{ item.vmid }}"
+        state: started
+      loop: "{{ containers }}"
+
+    - name: Attendre que le container obtienne une IP
+      pause:
+        seconds: 10
+
+    - name: Récupérer l'IP du container
+      shell: |
+        ssh root@px.lebaron.sh "pct exec {{ item.vmid }} -- ip -4 addr show eth0 | grep -oP '(?<=inet\s)\d+(\.\d+){3}'"
+      register: container_ip
+      retries: 5
+      delay: 5
+      until: container_ip.rc == 0
+      loop: "{{ containers }}"
+
+    - name: Créer/vider le groupe lxc_containers dans le fichier hosts
+      lineinfile:
+        path: ./hosts
+        line: "[lxc_containers]"
+        create: yes
+        state: present
+    
+    - name: Ajouter les containers au fichier hosts (avec IP statique)
+      lineinfile:
+        path: ./hosts
+        line: "{{ item.hostname }} ansible_host={{ item.ip }} ansible_user=root"
+        insertafter: "^\\[lxc_containers\\]"
+      loop: "{{ containers }}"

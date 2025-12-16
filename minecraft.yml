@@ -1,5 +1,5 @@
 - name: Installation serveur minecraft
-  hosts: minecraft
+  hosts: lxc_containers
   remote_user: root
   vars:
      user: minecraft
@@ -20,11 +20,11 @@
       ansible.builtin.apt:
         deb: /home/java
       become: yes
-    - name: Cr  ation utilisateur
+    - name: Création utilisateur
       user: name={{ user }}
     - name: ajout de la clef ssh
       ansible.builtin.authorized_key: user={{ user }} key="{{ lookup('file', '~/.ssh/id_rsa.pub') }}"
-    - name: cr  ation dossier serveur
+    - name: création dossier serveur
       ansible.builtin.file:
         path: /home/minecraft/server
         state: directory
@@ -35,23 +35,7 @@
       ansible.builtin.get_url:
         url: https://piston-data.mojang.com/v1/objects/95495a7f485eedd84ce928cef5e223b757d2f764/server.jar
         dest: /home/minecraft/server
-    - name: cr  ation fichier eula
+    - name: création fichier eula
       copy:
         dest: /home/minecraft/server/eula.txt
         content: 'eula=true'
-    - name: Télécharger le paquet zabbix-release
-      ansible.builtin.get_url:
-        url: https://repo.zabbix.com/zabbix/7.4/release/debian/pool/main/z/zabbix-release/zabbix-release_latest_7.4+debian12_all.deb
-        dest: /tmp/zabbix-release_latest_7.4+debian12_all.deb
-    - name: installation paquet zabbix-release
-      ansible.builtin.apt:
-        deb: /tmp/zabbix-release_latest_7.4+debian12_all.deb
-    - name: installation paquet zabbix agent 2
-      ansible.builtin.apt:
-        name : zabbix-agent2
-        state: present
-    - name: Activer et démarrer le service Zabbix Agent 2
-      ansible.builtin.service:
-        name: zabbix-agent2
-        state: started
-        enabled: yes
