@@ -2,28 +2,16 @@
   hosts: localhost
   connection: local
   vars:
-    vmid: 301
-    hostname: testct
+    container_count: 5
+    base_vmid: 301
+    base_hostname: "testct"
+    base_ip: "10.10.10.201"
     template: "local:vztmpl/debian-12-standard_12.12-1_amd64.tar.zst"
     ssh_public_key: "{{ lookup('file', '~/.ssh/id_rsa.pub') }}"
-    containers:
-      - vmid: 301
-        hostname: testct01
-        ip: "10.10.10.201"
-        cores: 2
-        memory: 1024
-      - vmid: 302
-        hostname: testct02
-        ip: "10.10.10.202"
-        cores: 2
-        memory: 1024
-      - vmid: 303
-        hostname: testct03
-        ip: "10.10.10.203"
-        cores: 2
-        memory: 1024
     gateway: "10.10.10.1"
     netmask: "24"
+    cores: 2
+    memory: 1024
 
   tasks:
     - name: Cr  ation d'un container
@@ -33,20 +21,22 @@
         api_token_id: "ansible-token"
         api_token_secret: "0241ba01-df63-445d-a406-9357f2d2c80c"
         node: "px"
-        vmid: "{{ item.vmid }}"
-        hostname: "{{ item.hostname }}"
+        vmid: "{{ base_vmid + index }}"
+        hostname: "{{ base_hostname }}{{ '%02d' | format(index + 1) }}"
         ostemplate: "{{ template }}"
         storage: "local"
-        cores: "{{ item.cores }}"
-        memory: "{{ item.memory }}"
-        swap: "{{ item.memory }}"
+        cores: "{{ cores }}"
+        memory: "{{ memory }}"
+        swap: "{{ memory }}"
         netif:
-          net0: "name=eth0,bridge=vmbr1,ip={{ item.ip }}/{{ netmask }},gw={{ gateway }}"
+          net0: "name=eth0,bridge=vmbr1,ip={{ base_ip.rsplit('.', 1)[0] }}.{{ base_ip.rsplit('.', 1)[1]|int + index }}/{{ netmask }},gw={{ gateway }}"
         password: "root!"
         unprivileged: false
         state: present
         pubkey: "{{ ssh_public_key }}"
-      loop: "{{ containers }}"
+      loop: "{{ range(0, container_count) | list }}"
+      loop_control:
+        index_var: index
 
     - name: Démarrer le container
       community.general.proxmox:
@@ -54,9 +44,11 @@
         api_user: "logan@pam"
         api_token_id: "ansible-token"
         api_token_secret: "0241ba01-df63-445d-a406-9357f2d2c80c"
-        vmid: "{{ item.vmid }}"
+        vmid: "{{ base_vmid + index }}"
         state: started
-      loop: "{{ containers }}"
+      loop: "{{ range(0, container_count) | list }}"
+      loop_control:
+        index_var: index
 
     - name: Attendre que le container obtienne une IP
       pause:
@@ -64,12 +56,14 @@
 
     - name: Récupérer l'IP du container
       shell: |
-        ssh root@px.lebaron.sh "pct exec {{ item.vmid }} -- ip -4 addr show eth0 | grep -oP '(?<=inet\s)\d+(\.\d+){3}'"
+        ssh root@px.lebaron.sh "pct exec {{ base_vmid + index }} -- ip -4 addr show eth0 | grep -oP '(?<=inet\s)\d+(\.\d+){3}'"
       register: container_ip
       retries: 5
       delay: 5
       until: container_ip.rc == 0
-      loop: "{{ containers }}"
+      loop: "{{ range(0, container_count) | list }}"
+      loop_control:
+        index_var: index
 
     - name: Créer/vider le groupe lxc_containers dans le fichier hosts
       lineinfile:
@@ -77,10 +71,12 @@
         line: "[lxc_containers]"
         create: yes
         state: present
-    
+
     - name: Ajouter les containers au fichier hosts (avec IP statique)
       lineinfile:
         path: ./hosts
-        line: "{{ item.hostname }} ansible_host={{ item.ip }} ansible_user=root"
+        line: "{{ base_hostname }}{{ '%02d' | format(index + 1) }} ansible_host={{ base_ip.rsplit('.', 1)[0] }}.{{ base_ip.rsplit('.', 1)[1]|int + index }}>
         insertafter: "^\\[lxc_containers\\]"
-      loop: "{{ containers }}"
+      loop: "{{ range(0, container_count) | list }}"
+      loop_control:
+        index_var: index
