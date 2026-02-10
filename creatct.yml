@@ -12,6 +12,8 @@
     netmask: "24"
     cores: 2
     memory: 1024
+  vars_files:
+    - secret.yml
 
   tasks:
     - name: Creation d'un container
@@ -19,7 +21,7 @@
         api_host: "10.1.0.253"
         api_user: "logan_ansible@pve"
         api_token_id: "provisioning"
-        api_token_secret: "30c09be7-938c-446d-aa04-32458c4ec895"
+        api_token_secret: "{{ token_secret }}"
         node: "pve-01"
         vmid: "{{ base_vmid + index }}"
         hostname: "{{ base_hostname }}{{ '%02d' | format(index + 1) }}"
