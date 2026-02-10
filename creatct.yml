@@ -1,26 +1,26 @@
-- name: Cr  ation d'un container lxc
+- name: Creation d'un container lxc
   hosts: localhost
   connection: local
   vars:
     container_count: 5
     base_vmid: 301
     base_hostname: "testct"
-    base_ip: "10.10.10.201"
+    base_ip: "10.1.0.101"
     template: "local:vztmpl/debian-12-standard_12.12-1_amd64.tar.zst"
     ssh_public_key: "{{ lookup('file', '~/.ssh/id_rsa.pub') }}"
-    gateway: "10.10.10.1"
+    gateway: "10.1.0.254"
     netmask: "24"
     cores: 2
     memory: 1024
 
   tasks:
-    - name: Cr  ation d'un container
+    - name: Creation d'un container
       community.general.proxmox:
-        api_host: "px.lebaron.sh"
-        api_user: "logan@pam"
-        api_token_id: "ansible-token"
-        api_token_secret: "0241ba01-df63-445d-a406-9357f2d2c80c"
-        node: "px"
+        api_host: "10.1.0.253"
+        api_user: "logan_ansible@pve"
+        api_token_id: "provisioning"
+        api_token_secret: "30c09be7-938c-446d-aa04-32458c4ec895"
+        node: "pve-01"
         vmid: "{{ base_vmid + index }}"
         hostname: "{{ base_hostname }}{{ '%02d' | format(index + 1) }}"
         ostemplate: "{{ template }}"
@@ -29,7 +29,7 @@
         memory: "{{ memory }}"
         swap: "{{ memory }}"
         netif:
-          net0: "name=eth0,bridge=vmbr1,ip={{ base_ip.rsplit('.', 1)[0] }}.{{ base_ip.rsplit('.', 1)[1]|int + index }}/{{ netmask }},gw={{ gateway }}"
+          net0: "name=eth0,bridge=vmbr0,ip={{ base_ip.rsplit('.', 1)[0] }}.{{ base_ip.rsplit('.', 1)[1]|int + index }}/{{ netmask }},gw={{ gateway }}"
         password: "root!"
         unprivileged: false
         state: present
@@ -38,12 +38,12 @@
       loop_control:
         index_var: index
 
-    - name: Démarrer le container
+    - name: D emarrer le container
       community.general.proxmox:
-        api_host: "px.lebaron.sh"
-        api_user: "logan@pam"
-        api_token_id: "ansible-token"
-        api_token_secret: "0241ba01-df63-445d-a406-9357f2d2c80c"
+        api_host: "10.1.0.253"
+        api_user: "logan_ansible@pve"
+        api_token_id: "provisioning"
+        api_token_secret: "30c09be7-938c-446d-aa04-32458c4ec895"
         vmid: "{{ base_vmid + index }}"
         state: started
       loop: "{{ range(0, container_count) | list }}"
@@ -54,9 +54,9 @@
       pause:
         seconds: 10
 
-    - name: Récupérer l'IP du container
+    - name: Recuperer l'IP du container
       shell: |
-        ssh root@px.lebaron.sh "pct exec {{ base_vmid + index }} -- ip -4 addr show eth0 | grep -oP '(?<=inet\s)\d+(\.\d+){3}'"
+        ssh root@pve-01.sio.lan "pct exec {{ base_vmid + index }} -- ip -4 addr show eth0 | grep -oP '(?<=inet\s)\d+(\.\d+){3}'"
       register: container_ip
       retries: 5
       delay: 5
@@ -65,7 +65,7 @@
       loop_control:
         index_var: index
 
-    - name: Créer/vider le groupe lxc_containers dans le fichier hosts
+    - name: Creer/vider le groupe lxc_containers dans le fichier hosts
       lineinfile:
         path: ./hosts
         line: "[lxc_containers]"
