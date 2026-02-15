@@ -1,3 +1,4 @@
+---
 - name: Creation d'un container lxc
   hosts: localhost
   connection: local
@@ -77,7 +78,7 @@
     - name: Ajouter les containers au fichier hosts (avec IP statique)
       lineinfile:
         path: ./hosts
-        line: "{{ base_hostname }}{{ '%02d' | format(index + 1) }} ansible_host={{ base_ip.rsplit('.', 1)[0] }}.{{ base_ip.rsplit('.', 1)[1]|int + index }}>
+        line: "{{ base_hostname }}{{ '%02d' | format(index + 1) }} ansible_host={{ base_ip.rsplit('.', 1)[0] }}.{{ base_ip.rsplit('.', 1)[1]|int + index }}>"
         insertafter: "^\\[lxc_containers\\]"
       loop: "{{ range(0, container_count) | list }}"
       loop_control:
