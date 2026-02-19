@@ -13,13 +13,14 @@
     netmask: "24"
     cores: 2
     memory: 1024
+    api_host: "10.1.0.253"
   vars_files:
     - secret.yml
 
   tasks:
     - name: Creation d'un container
       community.general.proxmox:
-        api_host: "10.1.0.253"
+        api_host: "{{ api_host }}"
         api_user: "logan_ansible@pve"
         api_token_id: "provisioning"
         api_token_secret: "{{ token_secret }}"
