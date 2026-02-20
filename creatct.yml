@@ -42,12 +42,12 @@
       loop_control:
         index_var: index
 
-    - name: D emarrer le container
+    - name: Demarrer le container
       community.general.proxmox:
-        api_host: "10.1.0.253"
+        api_host: "{{ api_host }}"
         api_user: "logan_ansible@pve"
         api_token_id: "provisioning"
-        api_token_secret: "30c09be7-938c-446d-aa04-32458c4ec895"
+        api_token_secret: " {{ token_secret }}"
         vmid: "{{ base_vmid + index }}"
         state: started
       loop: "{{ range(0, container_count) | list }}"
@@ -79,7 +79,7 @@
     - name: Ajouter les containers au fichier hosts (avec IP statique)
       lineinfile:
         path: ./hosts
-        line: "{{ base_hostname }}{{ '%02d' | format(index + 1) }} ansible_host={{ base_ip.rsplit('.', 1)[0] }}.{{ base_ip.rsplit('.', 1)[1]|int + index }}>"
+        line: "{{ base_hostname }}{{ '%02d' | format(index + 1) }} ansible_host={{ base_ip.rsplit('.', 1)[0] }}.{{ base_ip.rsplit('.', 1)[1]|int + index }}"
         insertafter: "^\\[lxc_containers\\]"
       loop: "{{ range(0, container_count) | list }}"
       loop_control:
