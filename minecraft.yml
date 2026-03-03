@@ -2,11 +2,11 @@
   hosts: lxc_containers
   remote_user: root
   vars:
-     user: minecraft
+    user: minecraft
 
   tasks:
     - name: Installation paquet
-      apt: name={{ item }} update_cache=yes
+      ansible.builtin.apt: name={{ item }} update_cache=yes
       with_items:
         - screen
         - nano
