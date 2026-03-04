@@ -6,7 +6,9 @@
 
   tasks:
     - name: Installation paquet
-      ansible.builtin.apt: name={{ item }} update_cache=yes
+      ansible.builtin.apt: 
+        name: "{{ item }}"
+        update_cache: yes
       with_items:
         - screen
         - nano
