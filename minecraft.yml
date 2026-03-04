@@ -52,5 +52,4 @@
         cd /home/minecraft/server
         screen -dmS minecraft java -Xmx500M -Xms500M -jar server.jar nogui
       become: true
-      become_user: minecraft
-      
+

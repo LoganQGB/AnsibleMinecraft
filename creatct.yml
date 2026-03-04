@@ -75,12 +75,10 @@
       loop_control:
         index_var: index
 
-    - name: Creer/vider le groupe lxc_containers dans le fichier hosts
-      lineinfile:
-        path: ./hosts
-        line: "[lxc_containers]"
-        create: yes
-        state: present
+    - name: Reinitialiser le fichier hosts
+      ansible.builtin.copy:
+        dest: ./hosts
+        content: "[lxc_containers]\n"
 
     - name: Ajouter les containers au fichier hosts (avec IP statique)
       lineinfile:
