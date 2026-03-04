@@ -3,9 +3,9 @@
   hosts: localhost
   connection: local
   vars:
-    container_count: 5
+    container_count: 1
     base_vmid: 301
-    base_hostname: "testct"
+    base_hostname: "ServerMinecraft-"
     base_ip: "10.1.0.101"
     template: "local:vztmpl/debian-12-standard_12.12-1_amd64.tar.zst"
     ssh_public_key: "{{ lookup('file', '~/.ssh/id_rsa.pub') }}"
