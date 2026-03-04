@@ -90,3 +90,10 @@
       loop: "{{ range(0, container_count) | list }}"
       loop_control:
         index_var: index
+
+    - name: Correction des permissions authorized_keys
+      file:
+        path: /root/.ssh/authorized_keys
+        mode: '0600'
+    
+
