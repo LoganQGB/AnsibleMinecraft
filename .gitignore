@@ -1,2 +1,4 @@
 secret.yml
 hosts
+vault_passe.txt
+ansible.cfg

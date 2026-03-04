@@ -18,6 +18,12 @@
     - secret.yml
 
   tasks:
+    - name: Nettoyage du fichier known_hosts
+      shell: ssh-keygen -f "/root/.ssh/known_hosts" -R "{{ base_ip.rsplit('.', 1)[0] }}.{{ base_ip.rsplit('.', 1)[1]|int + index }}"
+      loop: "{{ range(0, container_count) | list }}"
+      loop_control:
+        index_var: index
+
     - name: Creation d'un container
       community.general.proxmox:
         api_host: "{{ api_host }}"
@@ -47,7 +53,7 @@
         api_host: "{{ api_host }}"
         api_user: "logan_ansible@pve"
         api_token_id: "provisioning"
-        api_token_secret: " {{ token_secret }}"
+        api_token_secret: "{{ token_secret }}"
         vmid: "{{ base_vmid + index }}"
         state: started
       loop: "{{ range(0, container_count) | list }}"
