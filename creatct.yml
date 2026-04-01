@@ -40,6 +40,7 @@
         swap: "{{ memory }}"
         netif:
           net0: "name=eth0,bridge=vmbr0,ip={{ base_ip.rsplit('.', 1)[0] }}.{{ base_ip.rsplit('.', 1)[1]|int + index }}/{{ netmask }},gw={{ gateway }}"
+        nameserver: "8.8.8.8"
         password: "root!"
         unprivileged: false
         state: present
@@ -66,7 +67,7 @@
 
     - name: Recuperer l'IP du container
       shell: |
-        ssh root@pve-01.sio.lan "pct exec {{ base_vmid + index }} -- ip -4 addr show eth0 | grep -oP '(?<=inet\s)\d+(\.\d+){3}'"
+        ssh root@10.1.0.253 "pct exec {{ base_vmid + index }} -- ip -4 addr show eth0 | grep -oP '(?<=inet\s)\d+(\.\d+){3}'"
       register: container_ip
       retries: 5
       delay: 5
