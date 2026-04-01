@@ -3,7 +3,7 @@
   hosts: localhost
   connection: local
   vars:
-    container_count: 1
+    container_count: 2
     base_vmid: 305
     base_hostname: "ServerMinecraft-"
     base_ip: "10.1.0.101"
