@@ -11,6 +11,7 @@
     ssh_public_key: "{{ lookup('file', '~/.ssh/id_rsa.pub') }}"
     gateway: "10.1.0.254"
     netmask: "24"
+    pool: "EPREUVE-E6-LQUAGHEBEUR"
     cores: 2
     memory: 1024
     api_host: "10.1.0.253"
@@ -35,6 +36,7 @@
         hostname: "{{ base_hostname }}{{ '%02d' | format(index + 1) }}"
         ostemplate: "{{ template }}"
         storage: "local"
+        pool: "{{ pool }}"
         cores: "{{ cores }}"
         memory: "{{ memory }}"
         swap: "{{ memory }}"
